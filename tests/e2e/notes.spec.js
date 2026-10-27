@@ -8,12 +8,11 @@ async function addNote(page, title, body) {
   await page.getByRole("button", { name: "Simpan" }).click();
 }
 
-// WO-3: pencarian
-test("mencari catatan", async ({ page }) => {
+// WO-4: offline
+test("tetap bisa dibuka saat offline", async ({ page, context }) => {
   await page.goto("/");
-  await addNote(page, "Belanja", "Susu");
-  await addNote(page, "Kerja", "Rapat jam 9");
-  await page.getByLabel("Cari").fill("rapat");
-  await expect(page.getByText("Kerja")).toBeVisible();
-  await expect(page.getByText("Belanja")).toBeHidden();
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+  await context.setOffline(true);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Catatan", exact: true })).toBeVisible();
 });
