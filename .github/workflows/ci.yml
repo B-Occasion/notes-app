@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [wo-1-storage]
+    branches: [main]
 
 jobs:
   checks:
