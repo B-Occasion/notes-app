@@ -1,7 +1,6 @@
 const STORAGE_KEY = 'notes-app:notes'
 
-function getStorage() {
-  const storage = globalThis.localStorage
+function getStorage(storage = globalThis.localStorage) {
 
   if (!storage) {
     throw new Error('localStorage is not available')
