@@ -1,6 +1,12 @@
 import "./style.css";
 import { createStore } from "./storage.js";
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .register(`${import.meta.env.BASE_URL}sw.js`)
+    .catch((error) => console.error("Service worker registration failed:", error));
+}
+
 const store = createStore();
 const app = document.querySelector("#app");
 
