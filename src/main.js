@@ -1,60 +1,111 @@
-import './style.css'
-import heroImg from './assets/hero.png'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import { setupCounter } from './counter.js'
+import "./style.css";
+import { createStore } from "./storage.js";
 
-document.querySelector('#app').innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${javascriptLogo}" class="framework" alt="JavaScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+const store = createStore();
+const app = document.querySelector("#app");
 
-<div class="ticks"></div>
+app.innerHTML = `
+  <main class="notes-app">
+    <header class="page-header">
+      <h1>Catatan</h1>
+      <button class="primary-button" id="add-note" type="button">Tambah catatan</button>
+    </header>
+    <section id="notes-view" aria-label="Daftar catatan">
+      <div id="notes-list" class="notes-list"></div>
+      <p id="empty-state" class="empty-state">Belum ada catatan. Tambahkan catatan pertamamu.</p>
+    </section>
+    <section id="editor-view" class="editor-view" aria-label="Editor catatan" hidden>
+      <form id="note-form">
+        <label for="note-title">Judul</label>
+        <input id="note-title" name="title" type="text" autocomplete="off" required>
+        <label for="note-body">Isi</label>
+        <textarea id="note-body" name="body" rows="8" required></textarea>
+        <div class="form-actions">
+          <button class="primary-button" type="submit">Simpan</button>
+          <button class="secondary-button" id="delete-note" type="button" hidden>Hapus</button>
+          <button class="secondary-button" id="cancel-edit" type="button">Batal</button>
+        </div>
+      </form>
+    </section>
+  </main>
+`;
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-          <img class="button-icon" src="${javascriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+const addButton = document.querySelector("#add-note");
+const notesView = document.querySelector("#notes-view");
+const editorView = document.querySelector("#editor-view");
+const noteForm = document.querySelector("#note-form");
+const titleInput = document.querySelector("#note-title");
+const bodyInput = document.querySelector("#note-body");
+const deleteButton = document.querySelector("#delete-note");
+const cancelButton = document.querySelector("#cancel-edit");
+const notesList = document.querySelector("#notes-list");
+const emptyState = document.querySelector("#empty-state");
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+let editingId = null;
 
-setupCounter(document.querySelector('#counter'))
+function showList() {
+  editorView.hidden = true;
+  notesView.hidden = false;
+  addButton.hidden = false;
+  editingId = null;
+  renderNotes();
+}
+
+function showEditor(note = null) {
+  editingId = note?.id ?? null;
+  titleInput.value = note?.title ?? "";
+  bodyInput.value = note?.body ?? "";
+  deleteButton.hidden = !note;
+  notesView.hidden = true;
+  editorView.hidden = false;
+  addButton.hidden = true;
+  titleInput.focus();
+}
+
+function renderNotes() {
+  const notes = store.list();
+  notesList.replaceChildren();
+  emptyState.hidden = notes.length > 0;
+
+  for (const note of notes) {
+    const card = document.createElement("article");
+    card.className = "note-card";
+
+    const title = document.createElement("h2");
+    title.textContent = note.title;
+
+    const body = document.createElement("p");
+    body.textContent = note.body;
+
+    const editButton = document.createElement("button");
+    editButton.className = "secondary-button";
+    editButton.type = "button";
+    editButton.textContent = "Edit";
+    editButton.addEventListener("click", () => showEditor(note));
+
+    card.append(title, body, editButton);
+    notesList.append(card);
+  }
+}
+
+addButton.addEventListener("click", () => showEditor());
+cancelButton.addEventListener("click", showList);
+
+noteForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  store.save({
+    id: editingId ?? crypto.randomUUID(),
+    title: titleInput.value.trim(),
+    body: bodyInput.value.trim(),
+  });
+  showList();
+});
+
+deleteButton.addEventListener("click", () => {
+  if (editingId !== null) {
+    store.remove(editingId);
+  }
+  showList();
+});
+
+renderNotes();
