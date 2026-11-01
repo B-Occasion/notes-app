@@ -24,9 +24,9 @@ function createId(notes) {
   return id
 }
 
-export function createStore() {
+export function createStore(storage) {
   function list() {
-    const storedNotes = getStorage().getItem(STORAGE_KEY)
+    const storedNotes = getStorage(storage).getItem(STORAGE_KEY)
 
     if (storedNotes === null) {
       return []
@@ -56,7 +56,7 @@ export function createStore() {
       notes[existingIndex] = savedNote
     }
 
-    getStorage().setItem(STORAGE_KEY, JSON.stringify(notes))
+    getStorage(storage).setItem(STORAGE_KEY, JSON.stringify(notes))
     return savedNote
   }
 
@@ -68,7 +68,7 @@ export function createStore() {
       return false
     }
 
-    getStorage().setItem(STORAGE_KEY, JSON.stringify(remainingNotes))
+    getStorage(storage).setItem(STORAGE_KEY, JSON.stringify(remainingNotes))
     return true
   }
 
@@ -80,7 +80,7 @@ export function createStore() {
     }
 
     return list().filter((note) =>
-      [note.title, note.content].some(
+      [note.title, note.body, note.content].some(
         (value) =>
           typeof value === 'string' &&
           value.toLowerCase().includes(normalizedQuery),
