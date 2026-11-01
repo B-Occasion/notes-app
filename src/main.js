@@ -11,6 +11,10 @@ app.innerHTML = `
       <button class="primary-button" id="add-note" type="button">Tambah catatan</button>
     </header>
     <section id="notes-view" aria-label="Daftar catatan">
+      <div class="search-field">
+        <label for="search-input">Cari</label>
+        <input id="search-input" type="search" autocomplete="off">
+      </div>
       <div id="notes-list" class="notes-list"></div>
       <p id="empty-state" class="empty-state">Belum ada catatan. Tambahkan catatan pertamamu.</p>
     </section>
@@ -40,6 +44,7 @@ const deleteButton = document.querySelector("#delete-note");
 const cancelButton = document.querySelector("#cancel-edit");
 const notesList = document.querySelector("#notes-list");
 const emptyState = document.querySelector("#empty-state");
+const searchInput = document.querySelector("#search-input");
 
 let editingId = null;
 
@@ -63,9 +68,13 @@ function showEditor(note = null) {
 }
 
 function renderNotes() {
-  const notes = store.list();
+  const query = searchInput.value;
+  const notes = store.search(query);
   notesList.replaceChildren();
   emptyState.hidden = notes.length > 0;
+  emptyState.textContent = query.trim()
+    ? "Tidak ada catatan yang cocok."
+    : "Belum ada catatan. Tambahkan catatan pertamamu.";
 
   for (const note of notes) {
     const card = document.createElement("article");
@@ -90,6 +99,7 @@ function renderNotes() {
 
 addButton.addEventListener("click", () => showEditor());
 cancelButton.addEventListener("click", showList);
+searchInput.addEventListener("input", renderNotes);
 
 noteForm.addEventListener("submit", (event) => {
   event.preventDefault();

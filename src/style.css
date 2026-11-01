@@ -87,6 +87,26 @@ h1 {
   gap: 12px;
 }
 
+.search-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.search-field label {
+  font-weight: 650;
+}
+
+.search-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #bfc9d9;
+  border-radius: 8px;
+  color: #172033;
+  background: #fff;
+}
+
 .note-card {
   overflow-wrap: anywhere;
   padding: 18px;
